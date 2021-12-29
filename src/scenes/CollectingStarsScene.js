@@ -1,7 +1,12 @@
 import Phaser from "phaser";
 
+
 var platforms;
 var player;
+var cursors;
+var stars;
+var score = 0;
+var scoreText;
 
 export default class CollectingStarsScene extends Phaser.Scene {
 
@@ -35,6 +40,8 @@ export default class CollectingStarsScene extends Phaser.Scene {
         player.setCollideWorldBounds(true);
         player.setBounce(0.2);
 
+        cursors = this.input.keyboard.createCursorKeys();
+
         this.anims.create({
             key : "left",
             frames : this.anims.generateFrameNumbers(`dude`, {
@@ -61,12 +68,53 @@ export default class CollectingStarsScene extends Phaser.Scene {
             repeat : -1
         })
         
+        this.physics.add.collider(player,platforms);
 
+        stars = this.physics.add.group({
+            key : 'star', 
+            repeat : 11,
+            setXY : {
+                x : 12,
+                y : 0,
+                stepX : 70
+            }
+        })
+
+        stars.children.iterate(function(child) {
+            child.setBounceY(Phaser.Math.FloatBetween(0.4,0.8));
+        })
+
+        this.physics.add.collider(stars, platforms);
+
+        this.physics.add.overlap(player,stars, this.collectStar, null, this);
+        
+        scoreText = this.add.text(16,16, `Score : 0` , {
+            fontSize : `32px`,
+            color : `yellow`
+        })
+    }
+
+    collectStar(player, star){
+        star.disableBody(true,true);
+        score += 10;
+        scoreText.setText(`Score : ${score}`);
     }
 
     update(){
-       
+       if(cursors.left.isDown){
+           player.setVelocityX(-160);
+           player.anims.play(`left`, true);
+       }else if(cursors.right.isDown){
+           player.setVelocityX(160);
+           player.anims.play(`right`, true);
+       }else{
+           player.setVelocityX(0);
+           player.anims.play(`turn`);
+       }
 
+       if(cursors.up.isDown){
+           player.setVelocityY(-250);
+       }
     }
 }
 
